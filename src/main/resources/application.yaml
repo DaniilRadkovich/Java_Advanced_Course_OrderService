@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: orderservice
+
+  profiles:
+    active: docker
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      default-schema: public
+
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    default-schema: public
+
+

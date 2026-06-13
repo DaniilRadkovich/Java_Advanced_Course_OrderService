@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: v1-create-orders-table
+      author: daniilradkovich
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: "orders"
+      changes:
+        - createTable:
+            tableName: orders
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_price
+                  type: DECIMAL(10, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deleted
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - createIndex:
+            indexName: idx_orders_user_id
+            tableName: orders
+            unique: false
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            indexName: idx_orders_status
+            tableName: orders
+            unique: false
+            columns:
+              - column:
+                  name: status
+
+        - createIndex:
+            indexName: idx_orders_deleted
+            tableName: orders
+            unique: false
+            columns:
+              - column:
+                  name: deleted
