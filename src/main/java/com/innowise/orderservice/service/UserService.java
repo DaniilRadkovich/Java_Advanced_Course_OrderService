@@ -19,67 +19,48 @@ public class UserService {
 
   private final WebClient webClient;
 
-  @CircuitBreaker(
-      name = "user-service",
-      fallbackMethod = "getUserByIdFallback"
-  )
+  @CircuitBreaker(name = "user-service", fallbackMethod = "getUserByIdFallback")
   public UserDto getUserById(UUID userId) {
 
-    Authentication authentication =
-        SecurityContextHolder.getContext().getAuthentication();
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    String token;
+    String token = null;
 
-    if (authentication != null &&
-        authentication.getCredentials() instanceof String credentials) {
-
-      token = credentials;
-    } else {
-      token = null;
+    if (authentication != null && authentication.getCredentials() != null) {
+      token = authentication.getCredentials().toString();
     }
 
-    return webClient.get()
-        .uri("/api/v1/users/{id}", userId)
-        .headers(headers -> {
-          if (token != null) {
-            headers.setBearerAuth(token);
-          }
-        })
+    final String finalToken = token;
+
+    return webClient.get().uri("/api/v1/users/{id}", userId).headers(
+            headers -> {
+              if (finalToken != null && !finalToken.isBlank()) {
+                headers.setBearerAuth(finalToken);
+              }
+            })
         .retrieve()
         .onStatus(
             HttpStatusCode::isError,
             response -> response.bodyToMono(String.class)
                 .flatMap(body -> {
-                  log.error(
-                      "UserService returned {}: {}",
-                      response.statusCode(),
-                      body
-                  );
+                  log.error("UserService returned {}: {}", response.statusCode(), body);
 
                   return Mono.error(
-                      new RuntimeException(
-                          "User service error: " +
-                              response.statusCode()
-                      )
-                  );
+                      new RuntimeException("User service error: " + response.statusCode()));
                 })
         )
         .bodyToMono(UserDto.class)
         .block();
   }
 
-  private UserDto getUserByIdFallback(UUID userId, Exception ex) {
-    log.error(
-        "Fallback triggered for userId {}. Cause: {}",
-        userId,
-        ex.getMessage()
-    );
+  private UserDto getUserByIdFallback(UUID userId, Throwable ex) {
+    log.error("Fallback triggered for userId {}. Cause: {}", userId, ex.getMessage());
 
     return UserDto.builder()
         .id(userId)
         .name("Unknown")
         .surname("Unknown")
-        .email("unknown@example.com")
+        .email("unknown@mail.com")
         .birthDate(null)
         .active(false)
         .build();

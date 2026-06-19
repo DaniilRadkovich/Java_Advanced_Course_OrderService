@@ -33,16 +33,16 @@
     <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
     <lombok.version>1.18.38</lombok.version>
     <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
-    <sonar.reporting.outputDirectory>${project.reporting.outputDirectory}/jacoco/jacoco.xml
-    </sonar.reporting.outputDirectory>
+    <jjwt.version>0.12.6</jjwt.version>
+    <sonar.reporting.outputDirectory>${project.reporting.outputDirectory}/jacoco/jacoco.xml</sonar.reporting.outputDirectory>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <sonar.projectKey>DaniilRadkovich_Java_Advanced_Course_OrderService
-    </sonar.projectKey>
+    <sonar.projectKey>DaniilRadkovich_Java_Advanced_Course_OrderService</sonar.projectKey>
     <sonar.organization>daniilradkovich</sonar.organization>
     <sonar.exclusions>
       **/config/**,**/exception/**,**/model/**,**/mapper/**,**/security/**,**/repository/**
     </sonar.exclusions>
   </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -59,6 +59,14 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webflux</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
     <dependency>
       <groupId>org.postgresql</groupId>
@@ -81,6 +89,31 @@
       <version>${org.mapstruct.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-spring-boot3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+      <version>${jjwt.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-impl</artifactId>
+      <version>${jjwt.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <version>${jjwt.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
@@ -89,14 +122,6 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-jsr310</artifactId>
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
@@ -112,26 +137,6 @@
       <groupId>org.testcontainers</groupId>
       <artifactId>postgresql</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.jsonwebtoken</groupId>
-      <artifactId>jjwt</artifactId>
-      <version>0.12.6</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jacoco</groupId>
-      <artifactId>jacoco-maven-plugin</artifactId>
-      <version>0.8.14</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.github.resilience4j</groupId>
-      <artifactId>resilience4j-spring-boot3</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-webflux</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.cloud</groupId>
@@ -185,14 +190,14 @@
               <version>${lombok.version}</version>
             </path>
             <path>
-              <groupId>org.projectlombok</groupId>
-              <artifactId>lombok-mapstruct-binding</artifactId>
-              <version>${lombok-mapstruct-binding.version}</version>
-            </path>
-            <path>
               <groupId>org.mapstruct</groupId>
               <artifactId>mapstruct-processor</artifactId>
               <version>${org.mapstruct.version}</version>
+            </path>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok-mapstruct-binding</artifactId>
+              <version>${lombok-mapstruct-binding.version}</version>
             </path>
           </annotationProcessorPaths>
         </configuration>
@@ -200,6 +205,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.14</version>
         <executions>
           <execution>
             <goals>

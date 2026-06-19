@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +26,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -39,9 +41,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       @NonNull FilterChain filterChain)
       throws ServletException, IOException {
 
-    System.out.println("METHOD = " + request.getMethod());
-    System.out.println("URI = " + request.getRequestURI());
-    System.out.println("CONTENT-TYPE = " + request.getContentType());
+    log.info("METHOD = {}", request.getMethod());
+    log.info("URI = {}", request.getRequestURI());
+    log.info("CONTENT-TYPE = {}", request.getContentType());
 
     final String authHeader = request.getHeader("Authorization");
 
@@ -73,7 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
         UsernamePasswordAuthenticationToken authenticationToken =
-            new UsernamePasswordAuthenticationToken(userId, null, authorities);
+            new UsernamePasswordAuthenticationToken(userId, jwt, authorities);
 
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
@@ -91,7 +93,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       sendErrorResponse(
           response,
           request.getRequestURI(),
-          HttpServletResponse.SC_UNAUTHORIZED,
+          HttpServletResponse.SC_FORBIDDEN,
           "Forbidden!",
           "Invalid token data!");
     } catch (Exception e) {

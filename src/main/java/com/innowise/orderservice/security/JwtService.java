@@ -1,7 +1,6 @@
 package com.innowise.orderservice.security;
 
 import com.innowise.orderservice.exception.TokenLifetimeValidationException;
-import com.innowise.orderservice.model.dto.UserDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;

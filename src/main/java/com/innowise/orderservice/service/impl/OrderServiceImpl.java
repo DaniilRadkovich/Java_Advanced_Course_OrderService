@@ -22,12 +22,14 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -48,7 +50,6 @@ public class OrderServiceImpl implements OrderService {
     Order order = Order.builder()
         .userId(orderRequest.getUserId())
         .status(orderRequest.getOrderStatus())
-        .totalPrice(orderRequest.getTotalPrice())
         .build();
 
     List<OrderItem> items = orderRequest.getOrderItems().stream()
@@ -75,7 +76,8 @@ public class OrderServiceImpl implements OrderService {
         .reduce(BigDecimal.ZERO, BigDecimal::add);
     order.setTotalPrice(totalPrice);
 
-    orderRepository.save(order);
+   orderRepository.save(order);
+   orderRepository.flush();
 
     return addUserInfo(order);
   }
@@ -121,7 +123,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     order.setStatus(orderRequest.getOrderStatus());
-    order.setTotalPrice(orderRequest.getTotalPrice());
     order.setUpdatedAt(Instant.now());
 
     List<OrderItem> updatedItems = orderRequest.getOrderItems().stream().map(
@@ -167,8 +168,17 @@ public class OrderServiceImpl implements OrderService {
 
   private OrderResponse addUserInfo(Order order) {
     OrderResponse orderResponse = orderMapper.toResponse(order);
-    UserDto userDto = userService.getUserById(orderResponse.getUserId());
-    orderResponse.setUser(userDto);
+    try {
+      UserDto userDto = userService.getUserById(orderResponse.getUserId());
+      orderResponse.setUser(userDto);
+    } catch (Exception e) {
+      log.error("Error with getting user from UserService: {}", e.getMessage());
+      orderResponse.setUser(UserDto.builder()
+          .id(orderResponse.getUserId())
+          .name("Unknown")
+          .surname("Unknown")
+          .build());
+    }
     return orderResponse;
   }
 }

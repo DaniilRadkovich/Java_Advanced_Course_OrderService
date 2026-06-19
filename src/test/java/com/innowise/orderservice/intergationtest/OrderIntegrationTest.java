@@ -76,7 +76,6 @@ class OrderIntegrationTest extends BaseIntegrationTest {
     request.setUserId(USER_ID);
     request.setOrderItems(List.of(itemRequest));
     request.setOrderStatus(OrderStatus.NEW);
-    request.setTotalPrice(BigDecimal.valueOf(200));
 
     mockMvc.perform(post("/api/v1/orders")
             .contentType(MediaType.APPLICATION_JSON)
@@ -153,7 +152,6 @@ class OrderIntegrationTest extends BaseIntegrationTest {
     request.setUserId(USER_ID);
     request.setOrderStatus(OrderStatus.IN_PROGRESS);
     request.setOrderItems(List.of(itemRequest));
-    request.setTotalPrice(BigDecimal.valueOf(300));
 
     mockMvc.perform(put("/api/v1/orders/{id}", order.getId())
             .contentType(MediaType.APPLICATION_JSON)
@@ -214,7 +212,6 @@ class OrderIntegrationTest extends BaseIntegrationTest {
     request.setUserId(USER_ID);
     request.setOrderItems(List.of(itemRequest));
     request.setOrderStatus(OrderStatus.NEW);
-    request.setTotalPrice(BigDecimal.valueOf(10));
 
     mockMvc.perform(post("/api/v1/orders")
             .contentType(MediaType.APPLICATION_JSON)

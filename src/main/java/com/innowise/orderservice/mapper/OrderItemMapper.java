@@ -4,11 +4,12 @@ import com.innowise.orderservice.model.dto.response.OrderItemResponse;
 import com.innowise.orderservice.model.entity.OrderItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface OrderItemMapper {
 
-  @Mapping(target = "itemId", ignore = true)
-  @Mapping(target = "orderId", ignore = true)
+  @Mapping(source = "order.id", target = "orderId")
+  @Mapping(source = "item.id", target = "itemId")
   OrderItemResponse toResponse(OrderItem save);
 }

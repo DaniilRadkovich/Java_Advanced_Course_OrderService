@@ -1,6 +1,8 @@
 services:
+
   postgres:
     image: postgres:15-alpine
+    container_name: orderservice-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -12,9 +14,9 @@ services:
 
   orderservice:
     build: .
-    container_name: orderservice_app
+    container_name: orderservice-app
     ports:
-      - "${APP_PORT}:8080"
+      - "${SERVER_PORT}:8083"
     depends_on:
       - postgres
     environment:
@@ -24,6 +26,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - USER_SERVICE_URL=${USER_SERVICE_URL}
+      - SERVER_PORT=${SERVER_PORT}
 
 volumes:
   postgres-data:

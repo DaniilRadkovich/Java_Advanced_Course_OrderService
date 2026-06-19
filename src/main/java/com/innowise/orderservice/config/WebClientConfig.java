@@ -15,7 +15,7 @@ public class WebClientConfig {
 
   @Bean
   public WebClient webClient(WebClient.Builder builder,
-      @Value("${USER_SERVICE_URL:http://userservice:8080}") String url) {
+      @Value("${USER_SERVICE_URL:http://userservice:8082}") String url) {
 
     return WebClient.builder()
         .baseUrl(url)
