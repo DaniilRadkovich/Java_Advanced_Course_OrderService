@@ -76,8 +76,8 @@ public class OrderServiceImpl implements OrderService {
         .reduce(BigDecimal.ZERO, BigDecimal::add);
     order.setTotalPrice(totalPrice);
 
-   orderRepository.save(order);
-   orderRepository.flush();
+    orderRepository.save(order);
+    orderRepository.flush();
 
     return addUserInfo(order);
   }
@@ -164,6 +164,19 @@ public class OrderServiceImpl implements OrderService {
     Order order = orderRepository.findById(orderId)
         .orElseThrow(() -> new OrderNotFoundException(ORDER_NOT_FOUND + orderId));
     orderRepository.delete(order);
+  }
+
+  @Transactional
+  public void updateOrderStatusFromKafka(Long orderId, OrderStatus status) {
+    Order order = orderRepository.findById(orderId)
+        .orElseThrow(() -> new OrderNotFoundException(ORDER_NOT_FOUND + orderId));
+    order.setStatus(status);
+    order.setUpdatedAt(Instant.now());
+    orderRepository.save(order);
+    log.info(
+        "Order with id: {} status successfully updated its status: {} from OrderService with Kafka!",
+        orderId,
+        status);
   }
 
   private OrderResponse addUserInfo(Order order) {

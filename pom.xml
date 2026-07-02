@@ -39,7 +39,7 @@
     <sonar.projectKey>DaniilRadkovich_Java_Advanced_Course_OrderService</sonar.projectKey>
     <sonar.organization>daniilradkovich</sonar.organization>
     <sonar.exclusions>
-      **/config/**,**/exception/**,**/model/**,**/mapper/**,**/security/**,**/repository/**
+      **/config/**,**/exception/**,**/model/**,**/mapper/**,**/messaging/**,**/security/**,**/repository/**,**/specification/**
     </sonar.exclusions>
   </properties>
 
@@ -142,6 +142,10 @@
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-contract-wiremock</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka</artifactId>
     </dependency>
   </dependencies>
 

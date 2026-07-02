@@ -10,5 +10,9 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
 
+  kafka:
+    consumer:
+      isolation-level: read_committed
+
 jwt:
   secret-key: ${JWT_SECRET}

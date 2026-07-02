@@ -66,4 +66,12 @@ public interface OrderService {
    * @param orderId the unique identifier (Long) of the order to remove.
    */
   void deleteOrder(Long orderId);
+
+  /**
+   * Modifies an existing order's status from Kafka.
+   *
+   * @param orderId      the unique identifier (Long) of the order to update.
+   * @param status status of the order.
+   */
+  void updateOrderStatusFromKafka(Long orderId, OrderStatus status);
 }
