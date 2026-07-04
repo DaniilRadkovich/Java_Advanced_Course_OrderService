@@ -80,21 +80,23 @@ class OrderItemServiceTest {
 
   @Test
   void should_success_createOrderItem() {
-    CreateOrderItemRequest request = new CreateOrderItemRequest();
+    CreateOrderItemRequest orderItemCreateRequest = new CreateOrderItemRequest();
+    orderItemCreateRequest.setOrderId(1L);
+    orderItemCreateRequest.setItemId(1L);
+    orderItemCreateRequest.setQuantity(2);
 
-    request.setOrderId(1L);
-    request.setItemId(1L);
-    request.setQuantity(2);
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
-    when(orderItemRepository.save(any(OrderItem.class))).thenReturn(orderItem);
+    when(orderItemMapper.toEntity(any(CreateOrderItemRequest.class), any(Order.class),
+        any(Item.class)))
+        .thenReturn(orderItem);
+    when(orderItemRepository.save(orderItem)).thenReturn(orderItem);
+    when(orderRepository.findById(any())).thenReturn(Optional.of(order));
+    when(itemRepository.findById(any())).thenReturn(Optional.of(item));
     when(orderItemMapper.toResponse(orderItem)).thenReturn(response);
 
-    OrderItemResponse result = orderItemService.createOrderItem(request);
+    OrderItemResponse result = orderItemService.createOrderItem(orderItemCreateRequest);
 
     assertNotNull(result);
-    verify(orderItemRepository).save(any(OrderItem.class));
+    verify(orderItemRepository).save(orderItem);
   }
 
   @Test

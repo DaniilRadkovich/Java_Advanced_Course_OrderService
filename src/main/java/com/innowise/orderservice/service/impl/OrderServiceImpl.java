@@ -4,6 +4,7 @@ import com.innowise.orderservice.exception.InvalidOrderDataException;
 import com.innowise.orderservice.exception.InvalidOrderQuantityException;
 import com.innowise.orderservice.exception.OrderNotFoundException;
 import com.innowise.orderservice.exception.ProductNotFoundException;
+import com.innowise.orderservice.mapper.OrderItemMapper;
 import com.innowise.orderservice.mapper.OrderMapper;
 import com.innowise.orderservice.model.dto.UserDto;
 import com.innowise.orderservice.model.dto.request.OrderRequest;
@@ -39,6 +40,7 @@ public class OrderServiceImpl implements OrderService {
   private final OrderRepository orderRepository;
   private final ItemRepository itemRepository;
   private final OrderMapper orderMapper;
+  private final OrderItemMapper orderItemMapper;
   private final UserService userService;
 
   @Override
@@ -47,10 +49,7 @@ public class OrderServiceImpl implements OrderService {
       throw new InvalidOrderDataException("Order items cannot be empty!");
     }
 
-    Order order = Order.builder()
-        .userId(orderRequest.getUserId())
-        .status(orderRequest.getOrderStatus())
-        .build();
+    Order order = orderMapper.toEntity(orderRequest);
 
     List<OrderItem> items = orderRequest.getOrderItems().stream()
         .map(itemRequest -> {
@@ -61,11 +60,10 @@ public class OrderServiceImpl implements OrderService {
             throw new InvalidOrderQuantityException("Quantity must be greater than 0!");
           }
 
-          return OrderItem.builder()
-              .item(item)
-              .quantity(itemRequest.getQuantity())
-              .order(order)
-              .build();
+          OrderItem orderItem = orderItemMapper.toEntity(itemRequest, item);
+          orderItem.setOrder(order);
+
+          return orderItem;
         })
         .toList();
 
@@ -133,11 +131,10 @@ public class OrderServiceImpl implements OrderService {
           Item item = itemRepository.findById(orderItemRequest.getItemId())
               .orElseThrow(() -> new ProductNotFoundException("Item not found!"));
 
-          return OrderItem.builder()
-              .item(item)
-              .quantity(orderItemRequest.getQuantity())
-              .order(order)
-              .build();
+          OrderItem orderItem = orderItemMapper.toEntity(orderItemRequest, item);
+          orderItem.setOrder(order);
+
+          return orderItem;
         }
     ).toList();
 

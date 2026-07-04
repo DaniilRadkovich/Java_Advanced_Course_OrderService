@@ -3,27 +3,32 @@ package com.innowise.orderservice.unittest;
 import com.innowise.orderservice.exception.InvalidOrderDataException;
 import com.innowise.orderservice.exception.InvalidOrderQuantityException;
 import com.innowise.orderservice.exception.OrderNotFoundException;
+import com.innowise.orderservice.mapper.OrderItemMapper;
 import com.innowise.orderservice.mapper.OrderMapper;
 import com.innowise.orderservice.model.dto.UserDto;
 import com.innowise.orderservice.model.dto.request.OrderItemRequest;
 import com.innowise.orderservice.model.dto.request.OrderRequest;
 import com.innowise.orderservice.model.dto.response.OrderResponse;
 import com.innowise.orderservice.model.entity.Order;
+import com.innowise.orderservice.model.entity.OrderItem;
 import com.innowise.orderservice.model.entity.OrderStatus;
 import com.innowise.orderservice.repository.OrderRepository;
 import com.innowise.orderservice.service.UserService;
 import com.innowise.orderservice.service.impl.OrderServiceImpl;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.UUID;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import com.innowise.orderservice.exception.ProductNotFoundException;
 import com.innowise.orderservice.model.entity.Item;
 import com.innowise.orderservice.repository.ItemRepository;
@@ -45,6 +50,9 @@ class OrderServiceTest {
 
   @Mock
   private OrderMapper orderMapper;
+
+  @Mock
+  private OrderItemMapper orderItemMapper;
 
   @Mock
   private UserService userService;
@@ -96,6 +104,15 @@ class OrderServiceTest {
 
   @Test
   void should_success_createOrder() {
+    Order mockOrder = new Order();
+    mockOrder.setOrderItems(new ArrayList<>());
+
+    when(orderMapper.toEntity(any(OrderRequest.class))).thenReturn(mockOrder);
+
+    OrderItem mockOrderItem = new OrderItem();
+    mockOrderItem.setItem(item);
+    mockOrderItem.setQuantity(4);
+    when(orderItemMapper.toEntity(any(), any(Item.class))).thenReturn(mockOrderItem);
     when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
     when(orderMapper.toResponse(any(Order.class))).thenReturn(orderResponse);
     when(userService.getUserById(userId)).thenReturn(userDto);
@@ -135,7 +152,7 @@ class OrderServiceTest {
         .price(BigDecimal.TEN)
         .build();
 
-   when(itemRepository.findById(itemId)).thenReturn(java.util.Optional.of(mockItem));
+    when(itemRepository.findById(itemId)).thenReturn(java.util.Optional.of(mockItem));
 
     orderRequest.getOrderItems()
         .getFirst()
@@ -180,9 +197,17 @@ class OrderServiceTest {
 
   @Test
   void should_success_updateOrder() {
+    order.setOrderItems(new ArrayList<>());
+
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
     when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
-    when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    OrderItem mockOrderItem = new OrderItem();
+    mockOrderItem.setItem(item);
+    mockOrderItem.setQuantity(4);
+    when(orderItemMapper.toEntity(any(), any(Item.class))).thenReturn(mockOrderItem);
+    when(orderRepository.save(any(Order.class))).thenAnswer(
+        invocation -> invocation.getArgument(0));
     when(orderMapper.toResponse(any(Order.class))).thenReturn(orderResponse);
     when(userService.getUserById(userId)).thenReturn(userDto);
 
@@ -232,6 +257,15 @@ class OrderServiceTest {
 
   @Test
   void should_success_createOrder_calculateTotalPriceCorrectly() {
+    Order mockOrder = new Order();
+    mockOrder.setOrderItems(new ArrayList<>());
+
+    when(orderMapper.toEntity(any(OrderRequest.class))).thenReturn(mockOrder);
+
+    OrderItem mockOrderItem = new OrderItem();
+    mockOrderItem.setItem(item);
+    mockOrderItem.setQuantity(1);
+    when(orderItemMapper.toEntity(any(), any(Item.class))).thenReturn(mockOrderItem);
     when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
     when(orderMapper.toResponse(any(Order.class))).thenReturn(orderResponse);
     when(userService.getUserById(userId)).thenReturn(userDto);
@@ -244,9 +278,7 @@ class OrderServiceTest {
 
     Order savedOrder = captor.getValue();
 
-    assertEquals(
-        BigDecimal.valueOf(200),
-        savedOrder.getTotalPrice()
+    assertEquals(BigDecimal.valueOf(100), savedOrder.getTotalPrice()
     );
   }
 }

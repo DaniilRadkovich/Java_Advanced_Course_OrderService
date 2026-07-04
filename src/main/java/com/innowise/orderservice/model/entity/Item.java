@@ -12,12 +12,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Table(name = "items")
 @SQLDelete(sql = "UPDATE items SET deleted = true WHERE id = ?")
-@Filter(name = "softDeletedFilter", condition = "deleted = false")
+@SQLRestriction("deleted = false")
 @Entity
 @Getter
 @Setter
@@ -36,4 +36,7 @@ public class Item extends BaseEntity {
 
   @Column(name = "price", nullable = false)
   private BigDecimal price;
+
+  @Column(name = "deleted", nullable = false)
+  private boolean deleted = false;
 }

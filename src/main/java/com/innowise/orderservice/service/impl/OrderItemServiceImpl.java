@@ -40,10 +40,8 @@ public class OrderItemServiceImpl implements OrderItemService {
         .orElseThrow(() -> new ProductNotFoundException(
             ITEM_NOT_FOUND + orderItemCreateRequest.getItemId()));
 
-    OrderItem orderItem = new OrderItem();
-    orderItem.setOrder(order);
-    orderItem.setItem(item);
-    orderItem.setQuantity(orderItemCreateRequest.getQuantity());
+    OrderItem orderItem = orderItemMapper.toEntity(orderItemCreateRequest, order, item);
+
     return orderItemMapper.toResponse(orderItemRepository.save(orderItem));
   }
 
