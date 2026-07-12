@@ -6,6 +6,8 @@ import com.innowise.orderservice.exception.OrderNotFoundException;
 import com.innowise.orderservice.exception.ProductNotFoundException;
 import com.innowise.orderservice.mapper.OrderItemMapper;
 import com.innowise.orderservice.mapper.OrderMapper;
+import com.innowise.orderservice.messaging.OrderKafkaEventListener;
+import com.innowise.orderservice.messaging.OrderKafkaProducer;
 import com.innowise.orderservice.model.dto.UserDto;
 import com.innowise.orderservice.model.dto.request.OrderRequest;
 import com.innowise.orderservice.model.dto.response.OrderResponse;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -42,8 +45,11 @@ public class OrderServiceImpl implements OrderService {
   private final OrderMapper orderMapper;
   private final OrderItemMapper orderItemMapper;
   private final UserService userService;
+  private final OrderKafkaProducer orderKafkaProducer;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
   @Override
+  @Transactional
   public OrderResponse createOrder(OrderRequest orderRequest) {
     if (orderRequest.getOrderItems() == null || orderRequest.getOrderItems().isEmpty()) {
       throw new InvalidOrderDataException("Order items cannot be empty!");
@@ -51,8 +57,7 @@ public class OrderServiceImpl implements OrderService {
 
     Order order = orderMapper.toEntity(orderRequest);
 
-    List<OrderItem> items = orderRequest.getOrderItems().stream()
-        .map(itemRequest -> {
+    List<OrderItem> items = orderRequest.getOrderItems().stream().map(itemRequest -> {
           Item item = itemRepository.findById(itemRequest.getItemId())
               .orElseThrow(() -> new ProductNotFoundException("Item not found!"));
 
@@ -69,15 +74,19 @@ public class OrderServiceImpl implements OrderService {
 
     order.setOrderItems(items);
 
-    BigDecimal totalPrice = items.stream().map(orderItem -> orderItem.getItem().getPrice()
-            .multiply(BigDecimal.valueOf(orderItem.getQuantity())))
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal totalPrice = calculateTotalPrice(items);
     order.setTotalPrice(totalPrice);
 
-    orderRepository.save(order);
-    orderRepository.flush();
+    Order savedOrder = orderRepository.save(order);
 
-    return addUserInfo(order);
+    applicationEventPublisher.publishEvent(savedOrder);
+
+    log.info(
+        "****KAFKA**** Order {} successfully created. Event scheduled for publishing after transaction commit. ****KAFKA****",
+        savedOrder.getId()
+    );
+
+    return addUserInfo(savedOrder);
   }
 
   @Override
@@ -145,10 +154,7 @@ public class OrderServiceImpl implements OrderService {
       order.setOrderItems(updatedItems);
     }
 
-    BigDecimal totalPrice = updatedItems.stream()
-        .map(orderItem -> orderItem.getItem().getPrice()
-            .multiply(BigDecimal.valueOf(orderItem.getQuantity())))
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal totalPrice = calculateTotalPrice(updatedItems);
     order.setTotalPrice(totalPrice);
 
     Order savedOrder = orderRepository.save(order);
@@ -190,5 +196,12 @@ public class OrderServiceImpl implements OrderService {
           .build());
     }
     return orderResponse;
+  }
+
+  private BigDecimal calculateTotalPrice(List<OrderItem> items) {
+    return items.stream()
+        .map(orderItem -> orderItem.getItem().getPrice()
+            .multiply(BigDecimal.valueOf(orderItem.getQuantity())))
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 }

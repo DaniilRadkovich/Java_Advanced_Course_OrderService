@@ -38,6 +38,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
@@ -56,6 +57,9 @@ class OrderServiceTest {
 
   @Mock
   private UserService userService;
+
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
 
   @InjectMocks
   private OrderServiceImpl orderService;
@@ -116,12 +120,14 @@ class OrderServiceTest {
     when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
     when(orderMapper.toResponse(any(Order.class))).thenReturn(orderResponse);
     when(userService.getUserById(userId)).thenReturn(userDto);
+    when(orderRepository.save(any(Order.class))).thenReturn(mockOrder);
 
     OrderResponse result = orderService.createOrder(orderRequest);
 
     assertNotNull(result);
     assertEquals(userDto, result.getUser());
     verify(orderRepository).save(any(Order.class));
+    verify(eventPublisher).publishEvent(any(Order.class));
   }
 
   @Test
@@ -269,6 +275,7 @@ class OrderServiceTest {
     when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
     when(orderMapper.toResponse(any(Order.class))).thenReturn(orderResponse);
     when(userService.getUserById(userId)).thenReturn(userDto);
+    when(orderRepository.save(any(Order.class))).thenReturn(mockOrder);
 
     ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
 
@@ -280,5 +287,6 @@ class OrderServiceTest {
 
     assertEquals(BigDecimal.valueOf(100), savedOrder.getTotalPrice()
     );
+    verify(eventPublisher).publishEvent(any(Order.class));
   }
 }

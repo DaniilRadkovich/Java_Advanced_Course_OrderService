@@ -16,18 +16,17 @@ public class PaymentKafkaConsumer {
 
   @KafkaListener(topics = "payment-events", groupId = "order-group")
   public void consumePaymentFromKafka(PaymentEvent paymentEvent) {
-    log.info("Payment event received: {}", paymentEvent);
+    log.info("****KAFKA**** Payment event received: {} ****KAFKA****", paymentEvent);
 
-    try {
-      if (paymentEvent.getStatus().equals(PaymentStatus.SUCCESS)) {
-        orderService.updateOrderStatusFromKafka(paymentEvent.getOrderId(), OrderStatus.PAID);
-      } else if (paymentEvent.getStatus().equals(PaymentStatus.FAILED)) {
-        orderService.updateOrderStatusFromKafka(paymentEvent.getOrderId(), OrderStatus.CANCELLED);
-      } else {
-        throw new IllegalArgumentException("Invalid payment status: " + paymentEvent.getStatus());
-      }
-    } catch (Exception e) {
-      log.error("Failed to process payment event via Kafka in OrderService: {}", paymentEvent, e);
+    if (paymentEvent.getStatus() == PaymentStatus.SUCCESS) {
+      orderService.updateOrderStatusFromKafka(paymentEvent.getOrderId(), OrderStatus.PAID);
+    } else if (paymentEvent.getStatus() == PaymentStatus.FAILED) {
+      orderService.updateOrderStatusFromKafka(paymentEvent.getOrderId(), OrderStatus.CANCELLED);
+    } else {
+      log.error(
+          "****KAFKA**** Failed to process payment event via Kafka in OrderService: {} ****KAFKA****",
+          paymentEvent);
+      throw new IllegalArgumentException("Unknown payment status: " + paymentEvent.getStatus());
     }
   }
 }

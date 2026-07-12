@@ -30,6 +30,9 @@ public class SecurityConfig {
             .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
         )
         .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info")
+            .permitAll()
+
             .requestMatchers(HttpMethod.POST, "/api/v1/items").hasRole("ADMIN")
             .requestMatchers(HttpMethod.PUT, "/api/v1/items/**").hasRole("ADMIN")
             .requestMatchers(HttpMethod.DELETE, "/api/v1/items/**").hasRole("ADMIN")
