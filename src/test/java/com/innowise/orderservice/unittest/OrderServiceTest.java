@@ -39,6 +39,10 @@ import org.mockito.Mock;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
@@ -60,6 +64,12 @@ class OrderServiceTest {
 
   @Mock
   private ApplicationEventPublisher eventPublisher;
+
+  @Mock
+  private SecurityContext securityContext;
+
+  @Mock
+  private Authentication authentication;
 
   @InjectMocks
   private OrderServiceImpl orderService;
@@ -171,6 +181,12 @@ class OrderServiceTest {
 
   @Test
   void should_success_getOrderById() {
+    orderResponse.setUser(userDto);
+
+    SecurityContextHolder.setContext(securityContext);
+    when(securityContext.getAuthentication()).thenReturn(authentication);
+    when(authentication.getAuthorities()).thenReturn((List) List.of(new SimpleGrantedAuthority("ROLE_USER")));
+    when(authentication.getName()).thenReturn(userId.toString());
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
     when(orderMapper.toResponse(order)).thenReturn(orderResponse);
     when(userService.getUserById(userId)).thenReturn(userDto);
@@ -184,9 +200,7 @@ class OrderServiceTest {
   void should_throwException_getOrderById_whenNotFound() {
     when(orderRepository.findById(1L)).thenReturn(Optional.empty());
 
-    assertThrows(OrderNotFoundException.class,
-        () -> orderService.getOrderById(1L)
-    );
+    assertThrows(OrderNotFoundException.class, () -> orderService.getOrderById(1L));
   }
 
   @Test

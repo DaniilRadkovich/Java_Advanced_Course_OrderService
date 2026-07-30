@@ -31,28 +31,24 @@ public class UserService {
 
     final String finalToken = token;
 
-    try {
-      return webClient.get().uri("/api/v1/users/{id}", userId).headers(
-              headers -> {
-                if (finalToken != null && !finalToken.isBlank()) {
-                  headers.setBearerAuth(finalToken);
-                }
-              })
-          .retrieve()
-          .onStatus(
-              HttpStatusCode::isError,
-              response -> response.bodyToMono(String.class)
-                  .flatMap(body -> {
-                    log.error("UserService returned {}: {}", response.statusCode(), body);
-                    return Mono.error(
-                        new RuntimeException("User service error: " + response.statusCode()));
-                  })
-          )
-          .bodyToMono(UserDto.class)
-          .block();
-    } catch (Exception ex) {
-      return getUserByIdFallback(userId, ex);
-    }
+    return webClient.get().uri("/api/v1/users/{id}", userId).headers(
+            headers -> {
+              if (finalToken != null && !finalToken.isBlank()) {
+                headers.setBearerAuth(finalToken);
+              }
+            })
+        .retrieve()
+        .onStatus(
+            HttpStatusCode::isError,
+            response -> response.bodyToMono(String.class)
+                .flatMap(body -> {
+                  log.error("UserService returned {}: {}", response.statusCode(), body);
+                  return Mono.error(
+                      new RuntimeException("User service error: " + response.statusCode()));
+                })
+        )
+        .bodyToMono(UserDto.class)
+        .block();
   }
 
 

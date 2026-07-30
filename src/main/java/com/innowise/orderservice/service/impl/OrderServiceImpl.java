@@ -95,6 +95,11 @@ public class OrderServiceImpl implements OrderService {
         .orElseThrow(() -> new OrderNotFoundException(ORDER_NOT_FOUND + orderId));
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    if (authentication == null) {
+      throw new AccessDeniedException("No authentication found!");
+    }
+
     boolean isAdmin = authentication.getAuthorities().stream()
         .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
 
