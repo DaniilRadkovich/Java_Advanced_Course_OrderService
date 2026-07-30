@@ -1,0 +1,15 @@
+spring:
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL_LOCAL}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret-key: ${JWT_SECRET:KZSHyaAUVhrpWoTlO7DkzqozsZBt62dxRNYPm53iRzA}

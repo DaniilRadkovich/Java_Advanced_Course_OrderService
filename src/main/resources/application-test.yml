@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  liquibase:
+    enabled: true
+
+USER_SERVICE_URL: http://localhost:${wiremock.server.port}
+
+jwt:
+  secret-key: ${JWT_SECRET:KZSHyaAUVhrpWoTlO7DkzqozsZBt62dxRNYPm53iRzA}

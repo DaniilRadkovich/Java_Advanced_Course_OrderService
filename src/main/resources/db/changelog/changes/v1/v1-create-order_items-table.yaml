@@ -1,0 +1,81 @@
+databaseChangeLog:
+  - changeSet:
+      id: v1-create-order_items-table
+      author: daniilradkovich
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: "order_items"
+      changes:
+        - createTable:
+            tableName: order_items
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: order_id
+                  type: BIGSERIAL
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_id
+                  type: BIGSERIAL
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableName: order_items
+            baseColumnNames: order_id
+            referencedTableName: orders
+            referencedColumnNames: id
+            constraintName: fk_order_items_order_id
+        - addForeignKeyConstraint:
+            baseTableName: order_items
+            baseColumnNames: item_id
+            referencedTableName: items
+            referencedColumnNames: id
+            constraintName: fk_order_items_item_id
+
+        - createIndex:
+            indexName: idx_order_items_order_id
+            tableName: order_items
+            unique: false
+            columns:
+              - column:
+                  name: order_id
+        - createIndex:
+            indexName: idx_items_item_id
+            tableName: order_items
+            unique: false
+            columns:
+              - column:
+                  name: item_id
+        - createIndex:
+            indexName: idx_order_items_order_id_item_id
+            tableName: order_items
+            unique: false
+            columns:
+              - column:
+                  name: item_id
+              - column:
+                  name: order_id
