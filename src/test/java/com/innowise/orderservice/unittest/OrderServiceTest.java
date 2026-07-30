@@ -303,4 +303,62 @@ class OrderServiceTest {
     );
     verify(eventPublisher).publishEvent(any(Order.class));
   }
+
+  @Test
+  void should_success_updateOrderStatusFromKafka() {
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    orderService.updateOrderStatusFromKafka(1L, OrderStatus.COMPLETED);
+
+    assertEquals(OrderStatus.COMPLETED, order.getStatus());
+    assertNotNull(order.getUpdatedAt());
+    verify(orderRepository).findById(1L);
+    verify(orderRepository).save(order);
+  }
+
+  @Test
+  void should_throwException_updateOrderStatusFromKafka_whenOrderNotFound() {
+    when(orderRepository.findById(1L)).thenReturn(Optional.empty());
+
+    assertThrows(OrderNotFoundException.class, () -> orderService.updateOrderStatusFromKafka(1L, OrderStatus.COMPLETED));
+  }
+
+  @Test
+  void should_success_addUserInfo_WhenUserServiceIsAvailable() {
+    orderResponse.setUser(userDto);
+
+    SecurityContextHolder.setContext(securityContext);
+    when(securityContext.getAuthentication()).thenReturn(authentication);
+    when(authentication.getAuthorities()).thenReturn((List) List.of(new SimpleGrantedAuthority("ROLE_USER")));
+    when(authentication.getName()).thenReturn(userId.toString());
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+    when(userService.getUserById(userId)).thenReturn(userDto);
+
+    OrderResponse result = orderService.getOrderById(1L);
+
+    assertNotNull(result.getUser());
+    assertEquals("John", result.getUser().getName());
+  }
+
+  @Test
+  void should_fallback_addUserInfo_WhenUserServiceThrowsException() {
+    orderResponse.setUser(userDto);
+
+    SecurityContextHolder.setContext(securityContext);
+    when(securityContext.getAuthentication()).thenReturn(authentication);
+    when(authentication.getAuthorities()).thenReturn((List) List.of(new SimpleGrantedAuthority("ROLE_USER")));
+    when(authentication.getName()).thenReturn(userId.toString());
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+    when(userService.getUserById(userId)).thenThrow(new RuntimeException("Connection timeout"));
+
+    OrderResponse result = orderService.getOrderById(1L);
+
+    assertNotNull(result.getUser());
+    assertEquals(userId, result.getUser().getId());
+    assertEquals("Unknown", result.getUser().getName());
+    assertEquals("Unknown", result.getUser().getSurname());
+  }
 }
