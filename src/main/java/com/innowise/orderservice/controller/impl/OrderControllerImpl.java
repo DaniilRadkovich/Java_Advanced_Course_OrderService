@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,7 +40,7 @@ public class OrderControllerImpl implements OrderController {
   }
 
   @GetMapping("/{id}")
-  @PostAuthorize("hasRole('ADMIN') or returnObject.body.userId.toString() == authentication.principal.claims['id']")
+  @PreAuthorize("hasRole('ADMIN') or isAuthenticated()")
   public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
     return ResponseEntity.ok(orderService.getOrderById(id));
   }

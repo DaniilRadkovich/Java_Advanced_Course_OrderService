@@ -23,7 +23,6 @@ public class UserService {
   public UserDto getUserById(UUID userId) {
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
     String token = null;
 
     if (authentication != null && authentication.getCredentials() != null) {
@@ -32,30 +31,33 @@ public class UserService {
 
     final String finalToken = token;
 
-    return webClient.get().uri("/api/v1/users/{id}", userId).headers(
-            headers -> {
-              if (finalToken != null && !finalToken.isBlank()) {
-                headers.setBearerAuth(finalToken);
-              }
-            })
-        .retrieve()
-        .onStatus(
-            HttpStatusCode::isError,
-            response -> response.bodyToMono(String.class)
-                .flatMap(body -> {
-                  log.error("UserService returned {}: {}", response.statusCode(), body);
-
-                  return Mono.error(
-                      new RuntimeException("User service error: " + response.statusCode()));
-                })
-        )
-        .bodyToMono(UserDto.class)
-        .block();
+    try {
+      return webClient.get().uri("/api/v1/users/{id}", userId).headers(
+              headers -> {
+                if (finalToken != null && !finalToken.isBlank()) {
+                  headers.setBearerAuth(finalToken);
+                }
+              })
+          .retrieve()
+          .onStatus(
+              HttpStatusCode::isError,
+              response -> response.bodyToMono(String.class)
+                  .flatMap(body -> {
+                    log.error("UserService returned {}: {}", response.statusCode(), body);
+                    return Mono.error(
+                        new RuntimeException("User service error: " + response.statusCode()));
+                  })
+          )
+          .bodyToMono(UserDto.class)
+          .block();
+    } catch (Exception ex) {
+      return getUserByIdFallback(userId, ex);
+    }
   }
+
 
   private UserDto getUserByIdFallback(UUID userId, Throwable ex) {
     log.error("Fallback triggered for userId {}. Cause: {}", userId, ex.getMessage());
-
     return UserDto.builder()
         .id(userId)
         .name("Unknown")

@@ -6,8 +6,6 @@ import com.innowise.orderservice.exception.OrderNotFoundException;
 import com.innowise.orderservice.exception.ProductNotFoundException;
 import com.innowise.orderservice.mapper.OrderItemMapper;
 import com.innowise.orderservice.mapper.OrderMapper;
-import com.innowise.orderservice.messaging.OrderKafkaEventListener;
-import com.innowise.orderservice.messaging.OrderKafkaProducer;
 import com.innowise.orderservice.model.dto.UserDto;
 import com.innowise.orderservice.model.dto.request.OrderRequest;
 import com.innowise.orderservice.model.dto.response.OrderResponse;
@@ -30,6 +28,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +46,6 @@ public class OrderServiceImpl implements OrderService {
   private final OrderMapper orderMapper;
   private final OrderItemMapper orderItemMapper;
   private final UserService userService;
-  private final OrderKafkaProducer orderKafkaProducer;
   private final ApplicationEventPublisher applicationEventPublisher;
 
   @Override
@@ -94,6 +94,17 @@ public class OrderServiceImpl implements OrderService {
     Order order = orderRepository.findById(orderId)
         .orElseThrow(() -> new OrderNotFoundException(ORDER_NOT_FOUND + orderId));
 
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    boolean isAdmin = authentication.getAuthorities().stream()
+        .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+
+    if (!isAdmin) {
+      String currentUserId = authentication.getName();
+
+      if (!order.getUserId().toString().equals(currentUserId)) {
+        throw new AccessDeniedException("No access to this order!");
+      }
+    }
     return addUserInfo(order);
   }
 

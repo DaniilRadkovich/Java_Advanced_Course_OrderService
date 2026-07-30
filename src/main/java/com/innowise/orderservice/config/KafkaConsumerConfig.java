@@ -21,7 +21,7 @@ import org.springframework.util.backoff.FixedBackOff;
 @Configuration
 public class KafkaConsumerConfig {
 
-  @Value("${kafka.bootstrap-servers:localhost:9092}")
+  @Value("${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}")
   private String bootstrapServers;
 
   @Bean
